@@ -1,13 +1,13 @@
 [project] # Update all fields in this section
-name = "project-name-here" 
+name = "onyx-analysis-helper" 
 version = "0.1.0" 
-description = "Short description here"
-authors = [{name = "Author name", email = "email.address@example.com"}] 
+description = "Repository containing helper functions to support interactions with onyx analysis tables"
+authors = [{name = "Deborah Greer", email = "deborah.greer@ukhsa.gov.uk"}] 
 requires-python = ">=3.12" 
-dependencies = ["pandas", "pyyaml", "climb-onyx-client"] 
+dependencies = ["climb-onyx-client"] 
 
 [tool.setuptools.dynamic]
-version = {attr = "project_name_here.__version__"} # Add underscore separated repo name here
+version = {attr = "onyx_analysis_helper.__version__"} # Add underscore separated repo name here
 
 [project.optional-dependencies] # Dependencies for developers only - add more if required
 dev = ["ruff>=0.4.10,<0.5", "pytest", "pre-commit"] 
@@ -16,8 +16,8 @@ dev = ["ruff>=0.4.10,<0.5", "pytest", "pre-commit"]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[project.scripts] # Update with main repo script here
-qc_sample = "project_name_here.main_script:main"
+#[project.scripts] # Update with main repo script here
+#qc_sample = "project_name_here.main_script:main"
 
 [tool.ruff.lint] # Lint rules to follow - add or delete if required
 select = [
