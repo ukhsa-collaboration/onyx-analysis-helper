@@ -10,7 +10,7 @@ dependencies = ["climb-onyx-client"]
 version = {attr = "onyx_analysis_helper.__version__"} # Add underscore separated repo name here
 
 [project.optional-dependencies] # Dependencies for developers only - add more if required
-dev = ["ruff>=0.4.10,<0.5", "pytest", "pre-commit"] 
+dev = ["ruff>=0.4.10,<0.5", "pytest", "pre-commit", "regex"]
 
 [build-system] # Leave this section
 requires = ["setuptools"]
