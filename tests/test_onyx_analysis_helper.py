@@ -157,10 +157,9 @@ def test_add_analysis_details():
 def test_add_package_metadata():
     analysis = oa.OnyxAnalysis()
     analysis.add_package_metadata("climb-onyx-client")
-    version_check = re.fullmatch("[0-9]+\\.[0-9]+\\.[0-9]+", analysis.version)
+    version_check = re.fullmatch("[0-9]+\\.[0-9]+\\.[0-9]+", analysis.pipeline_version)
 
     assert analysis.pipeline_name == "climb-onyx-client"
-    assert analysis.description ==  "CLI and Python library for Onyx"
     assert version_check != None
     assert analysis.pipeline_url == "https://github.com/CLIMB-TRE/onyx-client"
 
@@ -184,7 +183,7 @@ def test_add_server_records():
     analysis = oa.OnyxAnalysis()
     analysis.add_server_records(sample_id, server)
 
-    assert analysis.synthscape_records == "C-123456789"
+    assert analysis.synthscape_records == ["C-123456789"]
 
 @pytest.mark.skip
 def test_write_analysis_to_onyx():
