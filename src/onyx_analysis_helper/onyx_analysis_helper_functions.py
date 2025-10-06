@@ -111,18 +111,17 @@ class OnyxAnalysis():
         self.outputs: os.path | None
         self.upstream_analyses: str | None
         self.downstream_analyses: str | None
-        self.identifiers: list[str]
+        self.identifiers: list[str] = []
 
     def add_analysis_details(self, analysis_name: str, analysis_description: str):
         self.name = analysis_name
         self.description = analysis_description
-        self.analysis_date = self._set_analysis_date() # TODO: Remove automatic date setter?
+        self._set_analysis_date() # TODO: Remove automatic date setter?
 
     def add_package_metadata(self, package_name: str):
         package_metadata = dict(metadata.metadata(package_name))
         self.pipeline_name = package_metadata['Name']
-        self.description = package_metadata['Summary']
-        self.version = package_metadata['Version']
+        self.pipeline_version = package_metadata['Version']
         self.pipeline_url = package_metadata["Project-URL"].split(", ")[1] # Get url from toml - add to template
 
     def add_methods(self, methods_dict: dict):
@@ -136,7 +135,7 @@ class OnyxAnalysis():
 
     def add_server_records(self, sample_id, server_name):
         server_records = f"{server_name}_records"
-        setattr(self, server_records, sample_id)
+        setattr(self, server_records, [sample_id])
 
     # Private methods for creating new analysis object
     def _set_analysis_date(self):
