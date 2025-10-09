@@ -146,18 +146,35 @@ class OnyxAnalysis:
         self.pipeline_version = package_metadata['Version']
         self.pipeline_url = package_metadata["Project-URL"].split(", ")[1] # Get url from toml - add to template
 
-    def add_methods(self, methods_dict: dict):
+
+    def add_methods(self, methods_dict: dict) -> bool:
+        """Attempts to add methods to onyx analysis object. If results are
+        invalid, returns results_fail.
+        """
         if isinstance(methods_dict, dict):
             self.methods = json.dumps(methods_dict)
+            methods_fail = False
         else:
             logging.error("Error: Methods must be in dict format")
+            methods_fail = True
 
-    def add_results(self, top_result, results_dict: dict):
+        return methods_fail
+
+
+    def add_results(self, top_result: str, results_dict: dict) -> bool:
+        """Attempts to add results to analysis object. If results are
+        invalid, returns results_fail.
+        """
         if isinstance(results_dict, dict):
             self.result = top_result
             self.result_metrics = json.dumps(results_dict)
+            results_fail = False
         else:
             logging.error("Error: result_metrics must be in dict format")
+            results_fail = True
+
+        return results_fail
+
 
     def add_server_records(self, sample_id, server_name):
         server_records = f"{server_name}_records"
