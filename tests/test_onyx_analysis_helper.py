@@ -304,17 +304,20 @@ def test_set_analysis_attributes(complete_field_dict):
     assert analysis.__dict__ == complete_field_dict
 
 
-def test_set_attributes_pass(complete_field_dict):
+def test_check_analysis_attributes_pass(complete_field_dict):
     analysis = oa.OnyxAnalysis()
-    analysis._set_attributes(complete_field_dict)
+    analysis._set_analysis_attributes(complete_field_dict)
+    attr_fail = analysis._check_analysis_attributes()
 
-    assert analysis.__dict__ == complete_field_dict
+    assert not attr_fail
 
 
-def test_set_attributes_fail(invalid_field_dict, complete_field_dict, caplog):
+def test_check_analysis_attributes_fail(invalid_field_dict, caplog):
     analysis = oa.OnyxAnalysis()
-    analysis._set_attributes(invalid_field_dict)
+    analysis._set_analysis_attributes(invalid_field_dict)
+    attr_fail = analysis._check_analysis_attributes()
 
     message = "Invalid attribute in onyx analysis: ['invalid_name']"
 
     assert message in caplog.text
+    assert attr_fail
