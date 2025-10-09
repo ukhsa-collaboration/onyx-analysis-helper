@@ -135,16 +135,24 @@ class OnyxAnalysis:
         self.downstream_analyses: str | None
         self.identifiers: list[str] = []
 
-    def add_analysis_details(self, analysis_name: str, analysis_description: str):
+
+    def add_analysis_details(self, analysis_name: str, analysis_description: str) -> None:
+        """Adds analysis details to onyx analysis object. Sets analysis date
+        if not already specified.
+        """
         self.name = analysis_name
         self.description = analysis_description
-        self._set_analysis_date()  # TODO: Remove automatic date setter?
+        self._set_analysis_date()
 
-    def add_package_metadata(self, package_name: str):
+
+    def add_package_metadata(self, package_name: str) -> None:
+        "Adds package metadata to onyx analysis object"
         package_metadata = dict(metadata.metadata(package_name))
-        self.pipeline_name = package_metadata['Name']
-        self.pipeline_version = package_metadata['Version']
-        self.pipeline_url = package_metadata["Project-URL"].split(", ")[1] # Get url from toml - add to template
+        self.pipeline_name = package_metadata["Name"]
+        self.pipeline_version = package_metadata["Version"]
+        self.pipeline_url = package_metadata["Project-URL"].split(", ")[
+            1
+        ]  # Get url from toml - add to template
 
 
     def add_methods(self, methods_dict: dict) -> bool:
@@ -176,21 +184,32 @@ class OnyxAnalysis:
         return results_fail
 
 
-    def add_server_records(self, sample_id, server_name):
+    def add_server_records(self, sample_id: str, server_name: str) -> None:
+        """Creates records field for appropriate server e.g. "mscape_records"
+        and adds sample_id to this field.
+        """
         server_records = f"{server_name}_records"
         setattr(self, server_records, [sample_id])
+
 
     # Private methods for creating new analysis object
     def _set_analysis_date(self):
         self.analysis_date = datetime.datetime.now().date().isoformat()
 
-    # Add in function to set s3 output path, other optional fields
 
+    # Add in function to set s3 output path, other optional fields
     # Create analysis in Onyx
     @call_to_onyx
-    def write_analysis_to_onyx(self, server: str, dryrun: bool) -> str:
-        fields_dict = vars(self)
-        self._check_required_fields(fields_dict)
+    def write_analysis_to_onyx(self, server: str, dryrun: bool) -> tuple[str,int]:
+        """Attempts to add onyx analysis to object.
+           Arguments:
+               server -- Server submitting data to
+               dryrun -- Specify if test or real upload to onyx
+           Returns:
+               result -- Analysis ID if valid submission, {} if test upload,
+                         None if upload fails
+               exitcode -- 0 if successful, 1 if fail
+        """
 
         with OnyxClient(CONFIG) as client:
             result = client.create_analysis(project=server, fields=vars(self), test=dryrun)
@@ -200,7 +219,8 @@ class OnyxAnalysis:
 
 
     # Write analysis object to json
-    def write_analysis_to_json(self, result_file):
+    def write_analysis_to_json(self, result_file: os.path) -> None:
+        "Writes onyx analysis object to json"
         fields_dict = vars(self)
         self._check_required_fields(fields_dict)
 
@@ -295,6 +315,7 @@ class OnyxAnalysis:
 
     # Read in analysis information from json
     def read_analysis_from_json(self, analysis_json: os.path) -> None:
+        "Reads analysis object from json and sets class attributes"
         with Path(analysis_json).open("r") as file:
             data = json.load(file)
 
@@ -302,7 +323,7 @@ class OnyxAnalysis:
 
 
     # Read in existing analysis from onyx
-    def read_analysis_from_onyx(self, analysis_id: str, server: str) -> None:
+    def read_analysis_from_onyx(self, analysis_id: str, server: str) -> tuple[dict,int]:
         """Method to retrieve an analysis from Onyx and set class attributes from this.
 
            Arguments:
@@ -320,7 +341,7 @@ class OnyxAnalysis:
 
     @staticmethod
     @call_to_onyx
-    def _get_analysis_from_onyx(analysis_id: str, server: str) -> tuple[dict, int]:
+    def _get_analysis_from_onyx(analysis_id: str, server: str) -> tuple[dict,int]:
         "Retrieves analysis from Onyx"
         with OnyxClient(CONFIG) as client:
             analysis_dict = client.get_analysis(server, analysis_id)
