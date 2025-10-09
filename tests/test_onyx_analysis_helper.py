@@ -292,15 +292,16 @@ def test_check_required_fields_fails(test_input, log_message, request, caplog):
 def test_read_analysis_from_json_pass(example_onyx_json_file, complete_field_dict):
     analysis = oa.OnyxAnalysis()
     analysis.read_analysis_from_json(example_onyx_json_file)
+
     assert analysis.__dict__ == complete_field_dict
 
 
-def test_read_analysis_from_json_fail(example_onyx_json_file_fail, complete_field_dict, caplog):
+def test_set_analysis_attributes(complete_field_dict):
     analysis = oa.OnyxAnalysis()
-    analysis.read_analysis_from_json(example_onyx_json_file_fail)
-    message = "Invalid attribute in onyx analysis: ['invalid_field']"
+    analysis._set_analysis_attributes(complete_field_dict)
+    print(analysis.__dict__)
 
-    assert message in caplog.text
+    assert analysis.__dict__ == complete_field_dict
 
 
 def test_set_attributes_pass(complete_field_dict):
