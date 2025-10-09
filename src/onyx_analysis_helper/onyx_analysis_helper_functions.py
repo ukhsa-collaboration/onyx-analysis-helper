@@ -193,8 +193,10 @@ class OnyxAnalysis:
 
 
     # Private methods for creating new analysis object
-    def _set_analysis_date(self):
-        self.analysis_date = datetime.datetime.now().date().isoformat()
+    def _set_analysis_date(self) -> None:
+        "Checks if analysis date is present and sets today's date if it isn't"
+        if not hasattr(self, "analysis_date"):
+            self.analysis_date = datetime.datetime.now().date().isoformat()
 
 
     # Add in function to set s3 output path, other optional fields
