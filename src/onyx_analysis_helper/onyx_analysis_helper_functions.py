@@ -271,3 +271,48 @@ class OnyxAnalysis:
 
         if invalid_attributes != []:
             logging.error("Invalid attribute in onyx analysis: %s", invalid_attributes)
+            attribute_fail = True
+
+        return attribute_fail
+
+
+    # Read in analysis information from json
+    def read_analysis_from_json(self, analysis_json: os.path) -> None:
+        with Path(analysis_json).open("r") as file:
+            data = json.load(file)
+
+        self._set_analysis_attributes(data)
+
+
+    # Read in existing analysis from onyx
+    def read_analysis_from_onyx(self, analysis_id: str, server: str) -> None:
+        """Method to retrieve an analysis from Onyx and set class attributes from this.
+
+           Arguments:
+           analysis_id -- Name of analysis to be returned
+           server -- Name of server to retrieve analysis from
+
+        """
+        analysis_dict, exitcode = self._get_analysis_from_onyx(analysis_id, server)
+        if exitcode != 0:
+            return analysis_dict, exitcode
+        self._set_analysis_attributes(analysis_dict)
+
+        return analysis_dict, exitcode
+
+
+    @staticmethod
+    @call_to_onyx
+    def _get_analysis_from_onyx(analysis_id: str, server: str) -> tuple[dict, int]:
+        "Retrieves analysis from Onyx"
+        with OnyxClient(CONFIG) as client:
+            analysis_dict = client.get_analysis(server, analysis_id)
+        exitcode = 0
+
+        return analysis_dict, exitcode
+
+
+    def _set_analysis_attributes(self, analysis_dict: dict) -> None:
+        "Sets class attributes from input dictionary"
+        for key, value in analysis_dict.items():
+            setattr(self, key, value)
