@@ -7,14 +7,14 @@ to support submission and reading of onyx analyses.
 
 # Imports - ordered (can use ruff to do this automatically)
 import datetime
+import importlib.metadata as metadata
 import json
 import logging
 import os
-import sys
 import time
-import importlib.metadata as metadata
-
 from functools import wraps
+from pathlib import Path
+
 from onyx import OnyxClient, OnyxConfig, OnyxEnv
 from onyx.exceptions import OnyxClientError, OnyxConfigError, OnyxConnectionError, OnyxHTTPError
 
@@ -24,6 +24,7 @@ CONFIG = OnyxConfig(
     domain=os.environ[OnyxEnv.DOMAIN],
     token=os.environ[OnyxEnv.TOKEN],
 )
+
 
 # Onyx query decorator
 def call_to_onyx(func):
@@ -38,8 +39,9 @@ def call_to_onyx(func):
 
         while success is False:
             try:
-                logging.debug("Attempting connection to Onyx. Attempt number %s",
-                          connection_attempts)
+                logging.debug(
+                    "Attempting connection to Onyx. Attempt number %s", connection_attempts
+                )
                 result = func(*args, **kwargs)
                 success = True
                 logging.debug("Successful connection to onyx")
@@ -49,19 +51,20 @@ def call_to_onyx(func):
             except OnyxConnectionError as exc:
                 if connection_attempts < 3:
                     connection_attempts += 1
-                    logging.debug("OnyxConnectionError: %s. Retrying connection in 5 seconds",
-                              exc)
+                    logging.debug("OnyxConnectionError: %s. Retrying connection in 5 seconds", exc)
                     time.sleep(5)
 
                 else:
-                    logging.error("""OnyxConnectionError: %s. Connection to Onyx failed %s times,
+                    logging.error(
+                        """OnyxConnectionError: %s. Connection to Onyx failed %s times,
                               exiting program""",
                               exc, connection_attempts)
 
                     return
 
             except OnyxConfigError as exc:
-                logging.error("""OnyxConfigError: %s. Check credentials and details in OnyxConfig
+                logging.error(
+                    """OnyxConfigError: %s. Check credentials and details in OnyxConfig
                           are correct. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details.""",
@@ -69,7 +72,8 @@ def call_to_onyx(func):
                 return
 
             except OnyxClientError as exc:
-                logging.error("""OnyxClientError: %s. Check calls to OnyxClient are correct
+                logging.error(
+                    """OnyxClientError: %s. Check calls to OnyxClient are correct
                           and required arguments e.g. climb_id are present. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
@@ -77,7 +81,8 @@ def call_to_onyx(func):
                 return
 
             except OnyxHTTPError as exc:
-                logging.error("""OnyxHTTPError: %s. See
+                logging.error(
+                    """OnyxHTTPError: %s. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
                           exc.response.json())
@@ -85,7 +90,8 @@ def call_to_onyx(func):
                 return
 
             except Exception as exc:
-                logging.error("""Unhandled error: %s. See
+                logging.error(
+                    """Unhandled error: %s. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
                           exc)
@@ -93,9 +99,11 @@ def call_to_onyx(func):
 
     return call_to_onyx_wrapper
 
+
 # Functions
 
-class OnyxAnalysis():
+
+class OnyxAnalysis:
     def __init__(self):
         self.analysis_date: datetime.datetime
         self.name: str
@@ -116,7 +124,7 @@ class OnyxAnalysis():
     def add_analysis_details(self, analysis_name: str, analysis_description: str):
         self.name = analysis_name
         self.description = analysis_description
-        self._set_analysis_date() # TODO: Remove automatic date setter?
+        self._set_analysis_date()  # TODO: Remove automatic date setter?
 
     def add_package_metadata(self, package_name: str):
         package_metadata = dict(metadata.metadata(package_name))
@@ -125,13 +133,17 @@ class OnyxAnalysis():
         self.pipeline_url = package_metadata["Project-URL"].split(", ")[1] # Get url from toml - add to template
 
     def add_methods(self, methods_dict: dict):
-        assert type(methods_dict) == dict
-        self.methods = json.dumps(methods_dict)
+        if isinstance(methods_dict, dict):
+            self.methods = json.dumps(methods_dict)
+        else:
+            logging.error("Error: Methods must be in dict format")
 
     def add_results(self, top_result, results_dict: dict):
-        assert type(results_dict) == dict
-        self.result = top_result
-        self.result_metrics = json.dumps(results_dict)
+        if isinstance(results_dict, dict):
+            self.result = top_result
+            self.result_metrics = json.dumps(results_dict)
+        else:
+            logging.error("Error: result_metrics must be in dict format")
 
     def add_server_records(self, sample_id, server_name):
         server_records = f"{server_name}_records"
@@ -141,8 +153,7 @@ class OnyxAnalysis():
     def _set_analysis_date(self):
         self.analysis_date = datetime.datetime.now().date().isoformat()
 
-    # Add in function to set analysis description, headline result,
-    # s3 output path, other optional fields
+    # Add in function to set s3 output path, other optional fields
 
     # Create analysis in Onyx
     @call_to_onyx
@@ -151,11 +162,7 @@ class OnyxAnalysis():
         self._check_required_fields(fields_dict)
 
         with OnyxClient(CONFIG) as client:
-            result = client.create_analysis(
-                project=server,
-                fields=fields_dict,
-                test=dryrun
-        )
+            result = client.create_analysis(project=server, fields=fields_dict, test=dryrun)
 
         return result
 
@@ -164,7 +171,7 @@ class OnyxAnalysis():
         fields_dict = vars(self)
         self._check_required_fields(fields_dict)
 
-        with open(result_file, "w", encoding = "utf-8") as file:
+        with Path(result_file).open("w") as file:
             json.dump(fields_dict, file)
 
     # Check fields
@@ -173,8 +180,14 @@ class OnyxAnalysis():
         try:
             # Check required fields
             missing_field = False
-            required_fields = ["analysis_date", "name", "pipeline_name",
-                               "pipeline_version", "result", "identifiers"]
+            required_fields = [
+                "analysis_date",
+                "name",
+                "pipeline_name",
+                "pipeline_version",
+                "result",
+                "identifiers",
+            ]
             if not all(field in fields_dict for field in required_fields):
                 missing_fields = [field for field in required_fields if field not in fields_dict]
                 logging.error("Missing required fields: %s", missing_fields)
@@ -193,7 +206,7 @@ class OnyxAnalysis():
 
     # Read in analysis information from json
     def read_analysis_from_json(self, analysis_json):
-        with open(analysis_json) as file:
+        with Path(analysis_json).open("r") as file:
             data = json.load(file)
         self._set_attributes(data)
 
@@ -210,13 +223,28 @@ class OnyxAnalysis():
         return analysis_dict
 
     def _set_attributes(self, analysis_dict):
-        valid_attributes = ["published_date", "site", "analysis_id",
-                            "analysis_date", "name", "description",
-                            "pipeline_name", "pipeline_url", "pipeline_version",
-                            "pipeline_command", "methods", "result", 
-                            "result_metrics", "report", "outputs", 
-                            "upstream_analyses", "downstream_analyses",
-                            "identifiers", "synthscape_records", "mscape_records"]
+        valid_attributes = [
+            "published_date",
+            "site",
+            "analysis_id",
+            "analysis_date",
+            "name",
+            "description",
+            "pipeline_name",
+            "pipeline_url",
+            "pipeline_version",
+            "pipeline_command",
+            "methods",
+            "result",
+            "result_metrics",
+            "report",
+            "outputs",
+            "upstream_analyses",
+            "downstream_analyses",
+            "identifiers",
+            "synthscape_records",
+            "mscape_records",
+        ]
         invalid_attributes = []
 
         for key, value in analysis_dict.items():
