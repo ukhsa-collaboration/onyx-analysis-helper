@@ -217,7 +217,7 @@ class OnyxAnalysis:
             result = client.create_analysis(project=server, fields=vars(self), test=dryrun)
         exitcode = 0
 
-        return exitcode, result
+        return result, exitcode
 
 
     # Write analysis object to json
