@@ -259,11 +259,15 @@ def test_write_analysis_to_json(onyx_json_file_path, complete_field_dict):
 
     assert Path(onyx_json_file_path).exists()
 
+
 def test_check_required_fields_passes(complete_field_dict, caplog):
     analysis = oa.OnyxAnalysis()
-    analysis._check_required_fields(complete_field_dict)
+    analysis._set_analysis_attributes(complete_field_dict)
+
+    field_fail = analysis._check_required_fields()
 
     assert caplog.text == ""
+    assert not field_fail
 
 
 @pytest.mark.parametrize(
@@ -279,7 +283,8 @@ def test_check_required_fields_fails(test_input, log_message, request, caplog):
     log_message = request.getfixturevalue(log_message)
 
     analysis = oa.OnyxAnalysis()
-    analysis._check_required_fields(fields_dict)
+    analysis._set_analysis_attributes(fields_dict)
+    analysis._check_required_fields()
 
     assert all(messages in caplog.text for messages in log_message)
 
