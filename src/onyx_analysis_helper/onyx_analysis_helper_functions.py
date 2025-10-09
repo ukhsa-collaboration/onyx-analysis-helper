@@ -42,11 +42,11 @@ def call_to_onyx(func):
                 logging.debug(
                     "Attempting connection to Onyx. Attempt number %s", connection_attempts
                 )
-                result = func(*args, **kwargs)
+                result, exitcode = func(*args, **kwargs)
                 success = True
                 logging.debug("Successful connection to onyx")
 
-                return result
+                return result, exitcode
 
             except OnyxConnectionError as exc:
                 if connection_attempts < 3:
@@ -58,9 +58,12 @@ def call_to_onyx(func):
                     logging.error(
                         """OnyxConnectionError: %s. Connection to Onyx failed %s times,
                               exiting program""",
-                              exc, connection_attempts)
-
-                    return
+                        exc,
+                        connection_attempts,
+                    )
+                    result = None
+                    exitcode = 1
+                    return result, exitcode
 
             except OnyxConfigError as exc:
                 logging.error(
@@ -68,8 +71,11 @@ def call_to_onyx(func):
                           are correct. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details.""",
-                          exc)
-                return
+                    exc,
+                )
+                result = None
+                exitcode = 1
+                return result, exitcode
 
             except OnyxClientError as exc:
                 logging.error(
@@ -77,25 +83,33 @@ def call_to_onyx(func):
                           and required arguments e.g. climb_id are present. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
-                          exc)
-                return
+                    exc,
+                )
+                result = None
+                exitcode = 1
+                return result, exitcode
 
             except OnyxHTTPError as exc:
                 logging.error(
                     """OnyxHTTPError: %s. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
-                          exc.response.json())
-
-                return
+                    exc.response.json(),
+                )
+                result = None
+                exitcode = 1
+                return result, exitcode
 
             except Exception as exc:
                 logging.error(
                     """Unhandled error: %s. See
                           https://climb-tre.github.io/onyx-client/api/documentation/exceptions/
                           for more details""",
-                          exc)
-                return
+                    exc,
+                )
+                result = None
+                exitcode = 1
+                return result, exitcode
 
     return call_to_onyx_wrapper
 
@@ -162,9 +176,11 @@ class OnyxAnalysis:
         self._check_required_fields(fields_dict)
 
         with OnyxClient(CONFIG) as client:
-            result = client.create_analysis(project=server, fields=fields_dict, test=dryrun)
+            result = client.create_analysis(project=server, fields=vars(self), test=dryrun)
+        exitcode = 0
 
-        return result
+        return exitcode, result
+
 
     # Write analysis object to json
     def write_analysis_to_json(self, result_file):
