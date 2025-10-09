@@ -224,7 +224,6 @@ class OnyxAnalysis:
     def write_analysis_to_json(self, result_file: os.path) -> None:
         "Writes onyx analysis object to json"
         fields_dict = vars(self)
-        self._check_required_fields(fields_dict)
 
         with Path(result_file).open("w") as file:
             json.dump(fields_dict, file)
