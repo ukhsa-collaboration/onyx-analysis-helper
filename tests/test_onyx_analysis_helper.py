@@ -6,7 +6,7 @@ pytest tests/test_onyx_analysis_helper.py -rP --basetemp tests/test_outputs/
 
 WARNING: Using --basetemp on an existing folder will overwrite all files.
 """
-
+import datetime
 import pytest
 import regex as re
 from pathlib import Path
@@ -197,6 +197,23 @@ def test_add_analysis_details():
 
     assert analysis.name == expected_name
     assert analysis.description == expected_description
+
+
+def test_add_analysis_date_no_date():
+    analysis = oa.OnyxAnalysis()
+    analysis._set_analysis_date()
+    print(analysis.analysis_date)
+
+    assert analysis.analysis_date == datetime.datetime.now().date().isoformat()
+
+
+def test_add_analysis_date_already_date():
+    correct_date = '2025-08-21'
+    analysis = oa.OnyxAnalysis()
+    analysis.analysis_date = correct_date
+    analysis._set_analysis_date()
+
+    assert analysis.analysis_date == correct_date
 
 
 def test_add_package_metadata():
