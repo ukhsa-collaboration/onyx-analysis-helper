@@ -135,7 +135,6 @@ class OnyxAnalysis:
         self.downstream_analyses: str | None
         self.identifiers: list[str] = []
 
-
     def add_analysis_details(self, analysis_name: str, analysis_description: str) -> None:
         """Adds analysis details to onyx analysis object. Sets analysis date
         if not already specified.
@@ -143,7 +142,6 @@ class OnyxAnalysis:
         self.name = analysis_name
         self.description = analysis_description
         self._set_analysis_date()
-
 
     def add_package_metadata(self, package_name: str) -> None:
         "Adds package metadata to onyx analysis object"
@@ -153,7 +151,6 @@ class OnyxAnalysis:
         self.pipeline_url = package_metadata["Project-URL"].split(", ")[
             1
         ]  # Get url from toml - add to template
-
 
     def add_methods(self, methods_dict: dict) -> bool:
         """Attempts to add methods to onyx analysis object. If results are
@@ -167,7 +164,6 @@ class OnyxAnalysis:
             methods_fail = True
 
         return methods_fail
-
 
     def add_results(self, top_result: str, results_dict: dict) -> bool:
         """Attempts to add results to analysis object. If results are
@@ -183,7 +179,6 @@ class OnyxAnalysis:
 
         return results_fail
 
-
     def add_server_records(self, sample_id: str, server_name: str) -> None:
         """Creates records field for appropriate server e.g. "mscape_records"
         and adds sample_id to this field.
@@ -191,26 +186,24 @@ class OnyxAnalysis:
         server_records = f"{server_name}_records"
         setattr(self, server_records, [sample_id])
 
-
     # Private methods for creating new analysis object
     def _set_analysis_date(self) -> None:
         "Checks if analysis date is present and sets today's date if it isn't"
         if not hasattr(self, "analysis_date"):
             self.analysis_date = datetime.datetime.now().date().isoformat()
 
-
     # Add in function to set s3 output path, other optional fields
     # Create analysis in Onyx
     @call_to_onyx
-    def write_analysis_to_onyx(self, server: str, dryrun: bool) -> tuple[str,int]:
+    def write_analysis_to_onyx(self, server: str, dryrun: bool) -> tuple[str, int]:
         """Attempts to add onyx analysis to object.
-           Arguments:
-               server -- Server submitting data to
-               dryrun -- Specify if test or real upload to onyx
-           Returns:
-               result -- Analysis ID if valid submission, {} if test upload,
-                         None if upload fails
-               exitcode -- 0 if successful, 1 if fail
+        Arguments:
+            server -- Server submitting data to
+            dryrun -- Specify if test or real upload to onyx
+        Returns:
+            result -- Analysis ID if valid submission, {} if test upload,
+                      None if upload fails
+            exitcode -- 0 if successful, 1 if fail
         """
 
         with OnyxClient(CONFIG) as client:
@@ -218,7 +211,6 @@ class OnyxAnalysis:
         exitcode = 0
 
         return result, exitcode
-
 
     # Write analysis object to json
     def write_analysis_to_json(self, result_file: os.path) -> None:
@@ -228,18 +220,16 @@ class OnyxAnalysis:
         with Path(result_file).open("w") as file:
             json.dump(fields_dict, file)
 
-
     # Check fields and attributes are valid
-    def check_analysis_object(self) -> tuple[bool,bool]:
+    def check_analysis_object(self) -> tuple[bool, bool]:
         """Performs checks on analysis object to ensure required fields are
-           present and there are no invalid attributes.
+        present and there are no invalid attributes.
         """
         analysis_dict = vars(self)
         required_field_fail = self._check_required_fields(analysis_dict)
         attribute_fail = self._check_analysis_attributes()
 
         return required_field_fail, attribute_fail
-
 
     def _check_required_fields(self) -> bool:
         "Checks all required fields are present, returns True is fields missing"
@@ -269,7 +259,6 @@ class OnyxAnalysis:
             required_field_fail = True
 
         return required_field_fail
-
 
     def _check_analysis_attributes(self) -> bool:
         "Checks all attributes are valid onyx fields, return True if invalid fields present"
@@ -308,7 +297,6 @@ class OnyxAnalysis:
 
         return attribute_fail
 
-
     # Read in analysis information from json
     def read_analysis_from_json(self, analysis_json: os.path) -> None:
         "Reads analysis object from json and sets class attributes"
@@ -317,14 +305,13 @@ class OnyxAnalysis:
 
         self._set_analysis_attributes(data)
 
-
     # Read in existing analysis from onyx
-    def read_analysis_from_onyx(self, analysis_id: str, server: str) -> tuple[dict,int]:
+    def read_analysis_from_onyx(self, analysis_id: str, server: str) -> tuple[dict, int]:
         """Method to retrieve an analysis from Onyx and set class attributes from this.
 
-           Arguments:
-           analysis_id -- Name of analysis to be returned
-           server -- Name of server to retrieve analysis from
+        Arguments:
+        analysis_id -- Name of analysis to be returned
+        server -- Name of server to retrieve analysis from
 
         """
         analysis_dict, exitcode = self._get_analysis_from_onyx(analysis_id, server)
@@ -334,17 +321,15 @@ class OnyxAnalysis:
 
         return analysis_dict, exitcode
 
-
     @staticmethod
     @call_to_onyx
-    def _get_analysis_from_onyx(analysis_id: str, server: str) -> tuple[dict,int]:
+    def _get_analysis_from_onyx(analysis_id: str, server: str) -> tuple[dict, int]:
         "Retrieves analysis from Onyx"
         with OnyxClient(CONFIG) as client:
             analysis_dict = client.get_analysis(server, analysis_id)
         exitcode = 0
 
         return analysis_dict, exitcode
-
 
     def _set_analysis_attributes(self, analysis_dict: dict) -> None:
         "Sets class attributes from input dictionary"
