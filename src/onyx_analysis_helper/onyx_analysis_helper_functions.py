@@ -228,55 +228,55 @@ class OnyxAnalysis:
         with Path(result_file).open("w") as file:
             json.dump(fields_dict, file)
 
-    # Check fields
-    @staticmethod
-    def _check_required_fields(fields_dict):
-        try:
-            # Check required fields
-            missing_field = False
-            required_fields = [
-                "analysis_date",
-                "name",
-                "pipeline_name",
-                "pipeline_version",
-                "result",
-                "identifiers",
-            ]
-            if not all(field in fields_dict for field in required_fields):
-                missing_fields = [field for field in required_fields if field not in fields_dict]
-                logging.error("Missing required fields: %s", missing_fields)
-                missing_field = True
 
-            # Check outputs
-            output_fields = ["report", "outputs"]
-            if not any(field in output_fields for field in fields_dict):
-                logging.error("Fields dict must contain one of: %s", output_fields)
-                missing_field = True
-            if missing_field:
-                raise ValueError
+    # Check fields and attributes are valid
+    def check_analysis_object(self) -> tuple[bool,bool]:
+        """Performs checks on analysis object to ensure required fields are
+           present and there are no invalid attributes.
+        """
+        analysis_dict = vars(self)
+        required_field_fail = self._check_required_fields(analysis_dict)
+        attribute_fail = self._check_analysis_attributes()
 
-        except ValueError as exc:
-            return exc
+        return required_field_fail, attribute_fail
 
-    # Read in analysis information from json
-    def read_analysis_from_json(self, analysis_json):
-        with Path(analysis_json).open("r") as file:
-            data = json.load(file)
-        self._set_attributes(data)
 
-    # Methods to read in existing analysis from onyx
-    def read_analysis_from_onyx(self, analysis_id, project):
-        analysis_dict = self._get_analysis_from_onyx(analysis_id, project)
-        self._set_attributes(analysis_dict)
+    def _check_required_fields(self) -> bool:
+        "Checks all required fields are present, returns True is fields missing"
+        fields_dict = vars(self)
+        required_field_fail = False
+        # Check required fields
+        missing_field = False
+        required_fields = [
+            "analysis_date",
+            "name",
+            "pipeline_name",
+            "pipeline_version",
+            "result",
+            "identifiers",
+        ]
+        if not all(field in fields_dict for field in required_fields):
+            missing_fields = [field for field in required_fields if field not in fields_dict]
+            logging.error("Missing required fields: %s", missing_fields)
+            missing_field = True
 
-    @staticmethod
-    @call_to_onyx
-    def _get_analysis_from_onyx(analysis_id, project):
-        with OnyxClient(CONFIG) as client:
-            analysis_dict = client.get_analysis(project, analysis_id)
-        return analysis_dict
+        # Check outputs
+        output_fields = ["report", "outputs"]
+        if not any(field in output_fields for field in fields_dict):
+            logging.error("Fields dict must contain one of: %s", output_fields)
+            missing_field = True
+        if missing_field:
+            required_field_fail = True
 
-    def _set_attributes(self, analysis_dict):
+        return required_field_fail
+
+
+    def _check_analysis_attributes(self) -> bool:
+        "Checks all attributes are valid onyx fields, return True if invalid fields present"
+
+        analysis_dict = vars(self)
+        attribute_fail = False
+
         valid_attributes = [
             "published_date",
             "site",
@@ -299,13 +299,8 @@ class OnyxAnalysis:
             "synthscape_records",
             "mscape_records",
         ]
-        invalid_attributes = []
 
-        for key, value in analysis_dict.items():
-            if key in valid_attributes:
-                setattr(self, key, value)
-            else:
-                invalid_attributes.append(key)
+        invalid_attributes = list(analysis_dict.keys() - set(valid_attributes))
 
         if invalid_attributes != []:
             logging.error("Invalid attribute in onyx analysis: %s", invalid_attributes)
