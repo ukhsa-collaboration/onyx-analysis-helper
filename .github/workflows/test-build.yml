@@ -32,7 +32,7 @@ jobs:
     - name: Install code base
       run: pip install .
     - name: Install tests and linter
-      run: pip install ruff pytest pytest-cov
+      run: pip install ruff pytest pytest-cov regex
     - name: Lint with ruff
       run: |
         # Stop the build if there are Python syntax errors
