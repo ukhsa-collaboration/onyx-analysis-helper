@@ -186,6 +186,21 @@ class OnyxAnalysis:
         server_records = f"{server_name}_records"
         setattr(self, server_records, [sample_id])
 
+    def add_output_location(self, result_path: os.path) -> bool:
+        """Adds result location to analysis object. If results are in a
+        file, adds a report field. If results are in a folder, adds
+        an outputs field.
+        """
+        outputs_fail = False
+        if Path(result_path).is_dir():
+            self.outputs = result_path
+        elif Path(result_path).is_file():
+            self.report = result_path
+        else:
+            outputs_fail = True
+
+        return outputs_fail
+
     # Private methods for creating new analysis object
     def _set_analysis_date(self) -> None:
         "Checks if analysis date is present and sets today's date if it isn't"
