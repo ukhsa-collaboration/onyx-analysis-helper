@@ -15,6 +15,11 @@ import regex as re
 
 from onyx_analysis_helper import onyx_analysis_helper_functions as oa
 
+# Autouse fixture
+@pytest.fixture(scope="session", autouse=True)
+def set_env():
+    os.environ["CONFIG"] = "Placeholder config"
+
 
 # Fixtures
 @pytest.fixture
