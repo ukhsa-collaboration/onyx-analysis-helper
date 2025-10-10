@@ -8,12 +8,13 @@ WARNING: Using --basetemp on an existing folder will overwrite all files.
 """
 
 import datetime
+import os
 from pathlib import Path
 
 import pytest
 import regex as re
-
 from onyx_analysis_helper import onyx_analysis_helper_functions as oa
+
 
 # Autouse fixture
 @pytest.fixture(scope="session", autouse=True)
