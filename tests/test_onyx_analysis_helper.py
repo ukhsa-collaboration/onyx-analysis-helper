@@ -8,19 +8,12 @@ WARNING: Using --basetemp on an existing folder will overwrite all files.
 """
 
 import datetime
-import os
 from pathlib import Path
 
 import pytest
 import regex as re
 
-from onyx_analysis_helper import onyx_analysis_helper_functions as oa
-
-
-# Autouse fixture
-@pytest.fixture(scope="session", autouse=True)
-def set_env():
-    os.environ["CONFIG"] = "Placeholder config"
+from onyx_analysis_helper.onyx_analysis_helper_functions import OnyxAnalysis
 
 
 # Fixtures
@@ -215,7 +208,7 @@ def example_result_file():
 def test_add_analysis_details():
     expected_name = "example_analysis"
     expected_description = "This is an example analysis."
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.add_analysis_details(expected_name, expected_description)
 
     assert analysis.name == expected_name
@@ -223,7 +216,7 @@ def test_add_analysis_details():
 
 
 def test_add_analysis_date_no_date():
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_date()
     print(analysis.analysis_date)
 
@@ -232,7 +225,7 @@ def test_add_analysis_date_no_date():
 
 def test_add_analysis_date_already_date():
     correct_date = "2025-08-21"
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.analysis_date = correct_date
     analysis._set_analysis_date()
 
@@ -240,7 +233,7 @@ def test_add_analysis_date_already_date():
 
 
 def test_add_package_metadata():
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.add_package_metadata("climb-onyx-client")
     version_check = re.fullmatch("[0-9]+\\.[0-9]+\\.[0-9]+", analysis.pipeline_version)
 
@@ -250,7 +243,7 @@ def test_add_package_metadata():
 
 
 def test_add_methods(example_methods, expected_methods_json):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.add_methods(example_methods)
 
     assert analysis.methods == expected_methods_json
@@ -258,7 +251,7 @@ def test_add_methods(example_methods, expected_methods_json):
 
 def test_add_results(example_results, expected_results):
     result = "headline result"
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.add_results(result, example_results)
 
     assert analysis.result == result
@@ -268,14 +261,14 @@ def test_add_results(example_results, expected_results):
 def test_add_server_records():
     sample_id = "C-123456789"
     server = "synthscape"
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.add_server_records(sample_id, server)
 
     assert analysis.synthscape_records == ["C-123456789"]
 
 
 def test_write_analysis_to_json(onyx_json_file_path, complete_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     for key, value in complete_field_dict.items():
         setattr(analysis, key, value)
     analysis.write_analysis_to_json(onyx_json_file_path)
@@ -284,7 +277,7 @@ def test_write_analysis_to_json(onyx_json_file_path, complete_field_dict):
 
 
 def test_check_required_fields_passes(complete_field_dict, caplog):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(complete_field_dict)
 
     field_fail = analysis._check_required_fields()
@@ -305,7 +298,7 @@ def test_check_required_fields_fails(test_input, log_message, request, caplog):
     fields_dict = request.getfixturevalue(test_input)
     log_message = request.getfixturevalue(log_message)
 
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(fields_dict)
     analysis._check_required_fields()
 
@@ -313,14 +306,14 @@ def test_check_required_fields_fails(test_input, log_message, request, caplog):
 
 
 def test_read_analysis_from_json_pass(example_onyx_json_file, complete_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis.read_analysis_from_json(example_onyx_json_file)
 
     assert analysis.__dict__ == complete_field_dict
 
 
 def test_set_analysis_attributes(complete_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(complete_field_dict)
     print(analysis.__dict__)
 
@@ -328,7 +321,7 @@ def test_set_analysis_attributes(complete_field_dict):
 
 
 def test_check_analysis_attributes_pass(complete_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(complete_field_dict)
     attr_fail = analysis._check_analysis_attributes()
 
@@ -336,7 +329,7 @@ def test_check_analysis_attributes_pass(complete_field_dict):
 
 
 def test_check_analysis_attributes_fail(invalid_field_dict, caplog):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(invalid_field_dict)
     attr_fail = analysis._check_analysis_attributes()
 
@@ -347,7 +340,7 @@ def test_check_analysis_attributes_fail(invalid_field_dict, caplog):
 
 
 def test_check_analysis_object_pass(complete_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(complete_field_dict)
 
     required_field_fail, attribute_fail = analysis.check_analysis_object()
@@ -357,7 +350,7 @@ def test_check_analysis_object_pass(complete_field_dict):
 
 
 def test_check_analysis_object_fail(invalid_field_dict):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     analysis._set_analysis_attributes(invalid_field_dict)
 
     required_field_fail, attribute_fail = analysis.check_analysis_object()
@@ -367,7 +360,7 @@ def test_check_analysis_object_fail(invalid_field_dict):
 
 
 def test_add_output_location_dir(example_result_dir):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     output_fail = analysis.add_output_location(example_result_dir)
 
     assert not output_fail
@@ -375,7 +368,7 @@ def test_add_output_location_dir(example_result_dir):
 
 
 def test_add_output_location_file(example_result_file):
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     output_fail = analysis.add_output_location(example_result_file)
 
     assert not output_fail
@@ -383,7 +376,7 @@ def test_add_output_location_file(example_result_file):
 
 
 def test_add_output_location_invalid():
-    analysis = oa.OnyxAnalysis()
+    analysis = OnyxAnalysis()
     output_fail = analysis.add_output_location("not a file path")
 
     assert output_fail
