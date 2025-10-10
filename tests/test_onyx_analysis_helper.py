@@ -8,20 +8,12 @@ WARNING: Using --basetemp on an existing folder will overwrite all files.
 """
 
 import datetime
-import os
 from pathlib import Path
 
 import pytest
 import regex as re
 
 from onyx_analysis_helper.onyx_analysis_helper_functions import OnyxAnalysis
-
-
-@pytest.fixture(scope="session", autouse=True)
-def set_env():
-    os.environ["CONFIG"] = "Placeholder config"
-    os.environ["ONYX_DOMAIN"] = "Placeholder domain"
-    os.environ["ONYX_TOKEN"] = "Placeholder token"
 
 
 # Fixtures
