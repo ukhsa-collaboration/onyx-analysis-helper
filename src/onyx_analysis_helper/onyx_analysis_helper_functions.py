@@ -235,13 +235,14 @@ class OnyxAnalysis:
         with Path(result_file).open("w") as file:
             json.dump(fields_dict, file)
 
+        return result_file
+
     # Check fields and attributes are valid
     def check_analysis_object(self) -> tuple[bool, bool]:
         """Performs checks on analysis object to ensure required fields are
         present and there are no invalid attributes.
         """
-        analysis_dict = vars(self)
-        required_field_fail = self._check_required_fields(analysis_dict)
+        required_field_fail = self._check_required_fields()
         attribute_fail = self._check_analysis_attributes()
 
         return required_field_fail, attribute_fail
