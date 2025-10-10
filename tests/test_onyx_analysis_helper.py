@@ -190,6 +190,20 @@ def invalid_field_dict():
     return field_dict
 
 
+@pytest.fixture
+def example_result_dir():
+    result_dir = "tests/test_data/"
+
+    return result_dir
+
+
+@pytest.fixture
+def example_result_file():
+    result_dir = "tests/test_data/C-123456789_qc_results.json"
+
+    return result_dir
+
+
 # Tests
 def test_add_analysis_details():
     expected_name = "example_analysis"
@@ -323,3 +337,46 @@ def test_check_analysis_attributes_fail(invalid_field_dict, caplog):
 
     assert message in caplog.text
     assert attr_fail
+
+
+def test_check_analysis_object_pass(complete_field_dict):
+    analysis = oa.OnyxAnalysis()
+    analysis._set_analysis_attributes(complete_field_dict)
+
+    required_field_fail, attribute_fail = analysis.check_analysis_object()
+
+    assert not required_field_fail
+    assert not attribute_fail
+
+
+def test_check_analysis_object_fail(invalid_field_dict):
+    analysis = oa.OnyxAnalysis()
+    analysis._set_analysis_attributes(invalid_field_dict)
+
+    required_field_fail, attribute_fail = analysis.check_analysis_object()
+
+    assert required_field_fail
+    assert attribute_fail
+
+
+def test_add_output_location_dir(example_result_dir):
+    analysis = oa.OnyxAnalysis()
+    output_fail = analysis.add_output_location(example_result_dir)
+
+    assert not output_fail
+    assert analysis.outputs
+
+
+def test_add_output_location_file(example_result_file):
+    analysis = oa.OnyxAnalysis()
+    output_fail = analysis.add_output_location(example_result_file)
+
+    assert not output_fail
+    assert analysis.report
+
+
+def test_add_output_location_invalid():
+    analysis = oa.OnyxAnalysis()
+    output_fail = analysis.add_output_location("not a file path")
+
+    assert output_fail
