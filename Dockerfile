@@ -1,5 +1,5 @@
 FROM python:3.12
 
-ADD . /app
-WORKDIR /app
+ADD . /gpha_mscape_onyx_analysis_helper/
+WORKDIR /gpha_mscape_onyx_analysis_helper
 RUN pip install .
